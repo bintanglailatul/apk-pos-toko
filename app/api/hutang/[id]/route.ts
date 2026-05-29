@@ -21,8 +21,8 @@ const hutangId = Number(id);
 
     // ambil data hutang
     const hutang = await prisma.hutang.findUnique({
-      where: { id },
-    });
+  where: { id: hutangId },
+});
 
     if (!hutang) {
       return NextResponse.json({
@@ -33,7 +33,7 @@ const hutangId = Number(id);
 
     // update hutang jadi lunas
     const updated = await prisma.hutang.update({
-      where: { id },
+  where: { id: hutangId },
       data: {
         status: "LUNAS",
         metode,
