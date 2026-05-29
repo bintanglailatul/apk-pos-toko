@@ -3,10 +3,11 @@ import { prisma } from "@/lib/prisma";
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = Number(params.id);
+    const { id } = await params;
+const hutangId = Number(id);
 
     const body = await req.json();
     const { metode, userId } = body;
