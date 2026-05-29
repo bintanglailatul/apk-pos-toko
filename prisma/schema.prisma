@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id           Int    @id @default(autoincrement())
+  name         String? @db.VarChar(100)
+  email        String? @unique @db.VarChar(100)
+  password     String?
+  role         String  @db.VarChar(20)
+
+  // RELASI
+  transactions transactions[]
+  pengeluaran  pengeluaran[]
+  hutang       Hutang[]
+  laporan      laporan[]
+}
+
+model products {
+  id         Int     @id @default(autoincrement())
+  name       String? @db.VarChar(100)
+
+  harga      Int?
+  harga_beli Int?
+
+  stok       Int? @default(0)
+
+  stokHijau  Int? @default(20)
+  stokOrange Int? @default(10)
+  stokMerah  Int? @default(5)
+
+  kategori   String?
+
+  // RELASI
+  transaction_details transaction_details[]
+}
+
+model transactions {
+  id        Int      @id @default(autoincrement())
+  tanggal   DateTime @default(now())
+
+  total     Int
+  bayar     Int
+  kembali   Int
+  metode    String   @db.VarChar(20)
+
+  user_id   Int
+  user_name String @default("")
+
+  users     users    @relation(fields: [user_id], references: [id])
+
+  transaction_details transaction_details[]
+}
+
+model transaction_details {
+  id             Int @id @default(autoincrement())
+
+  transaction_id Int
+  product_id     Int?
+
+  nama_produk String @default("")
+  type String @default("BARANG")
+
+  qty            Int
+  harga          Int
+
+  transactions transactions @relation(fields: [transaction_id], references: [id])
+  products     products?    @relation(fields: [product_id], references: [id])
+}
+
+model pengeluaran {
+  id         Int      @id @default(autoincrement())
+
+  user_id    Int
+  user_name String @default("")
+
+  users      users    @relation(fields: [user_id], references: [id])
+
+  keterangan String?
+  kategori   String?
+  metode     String?
+  supplier   String?
+  bukti      String?
+
+  jumlah     Int
+  tanggal    DateTime @default(now())
+}
+
+model Hutang {
+  id            Int @id @default(autoincrement())
+
+  user_id       Int
+  users         users @relation(fields: [user_id], references: [id])
+
+  namaPelanggan String
+  total         Int
+  bayar         Int @default(0)
+  kembali       Int @default(0)
+  status        String @default("HUTANG")
+  metode        String?
+  cart          Json?
+  isLunas       Boolean @default(false)
+
+  createdAt     DateTime @default(now())
+}
+
+model laporan {
+  id                Int @id @default(autoincrement())
+
+  tanggal_mulai     DateTime
+  tanggal_selesai   DateTime
+
+  total_pemasukan   Int
+  total_pengeluaran Int
+  total_modal       Int
+  laba_bersih       Int
+
+  user_id           Int
+  user_name String @default("")
+
+  users             users @relation(fields: [user_id], references: [id])
+
+  createdAt         DateTime @default(now())
+}
+
+model Setting {
+  id Int @id @default(1)
+
+  namaToko  String @default("Toko Saya")
+  logoToko  String?
+  alamat    String?
+  telepon   String?
+  tagline   String? @default("TOKO ATK DAN JASA CETAK")
+
+  footerStruk   String?
+  strukFontSize String?
+
+  adminBackgroundColor   String @default("#ffffff")
+  adminBackgroundImage   String?
+  adminBackgroundOpacity Float? @default(0.3)
+  adminFontSize          String?
+
+  kasirBackgroundColor   String @default("#ffffff")
+  kasirBackgroundImage   String?
+  kasirBackgroundOpacity Float? @default(0.3)
+  kasirFontSize          String?
+
+  stokMinimum      Int    @default(5)
+  stokWarningColor String @default("#ef4444")
+
+  stokGreenLimit  Int @default(20)
+  stokOrangeLimit Int @default(10)
+  stokRedLimit    Int @default(5)
+
+  stokGreenColor  String @default("#16a34a")
+  stokOrangeColor String @default("#f59e0b")
+  stokRedColor    String @default("#dc2626")
+
+  globalFontSize String @default("text-base")
+}

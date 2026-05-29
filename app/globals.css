@@ -5,22 +5,174 @@
   --foreground: #171717;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  font-size: calc(14px * var(--font-scale, 1));
+}
+
+/* ================= SCROLL ================= */
+
+.custom-scroll {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.18) transparent;
+}
+
+/* ================= PRINT RESET (SAFE MODE) ================= */
+
+@media print {
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    color: black !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* sembunyikan UI umum */
+  button,
+  nav,
+  aside,
+  header,
+  footer {
+    display: none !important;
+  }
+
+  /* ================= KUNCI UTAMA PRINT ================= */
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* hanya print area yang tampil */
+  .print-a4,
+  .print-a4 * {
+    visibility: visible !important;
+  }
+
+  .print-thermal,
+  .print-thermal * {
+    visibility: visible !important;
+  }
+
+  /* pastikan tampil di atas layout */
+  .print-a4,
+  .print-thermal {
+    position: fixed !important;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    background: white !important;
+    color: black !important;
+  }
+}
+
+/* ================= A4 LAPORAN ================= */
+
+@media print {
+
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+  .print-a4 {
+    width: 100% !important;
+  }
+
+  .print-a4 table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 10px !important;
+  }
+
+  .print-a4 th,
+  .print-a4 td {
+    border: 1px solid #000 !important;
+    padding: 5px !important;
+    font-size: 10px !important;
+    color: black !important;
+  }
+
+  .print-a4 thead {
+    display: table-header-group !important;
+    background: #000 !important;
+    color: #fff !important;
+  }
+
+  .print-a4 tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .print-a4 .shadow,
+  .print-a4 .shadow-md,
+  .print-a4 .rounded-2xl,
+  .print-a4 .backdrop-blur-md {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    backdrop-filter: none !important;
+  }
+
+  /* zebra biar lebih jelas */
+  .print-a4 tr:nth-child(even) {
+    background: #f5f5f5 !important;
+  }
+}
+
+/* ================= STRUK 58MM ================= */
+
+@media print {
+
+  @page {
+    size: 58mm auto;
+    margin: 0;
+  }
+
+  .print-thermal {
+    width: 58mm !important;
+    font-size: 10px !important;
+  }
+
+  .print-thermal table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  .print-thermal th,
+  .print-thermal td {
+    border: none !important;
+    padding: 2px !important;
+    font-size: 10px !important;
+  }
+
+  .print-thermal button {
+    display: none !important;
+  }
+}
+
+/* ================= GLOBAL CLEAN PRINT ================= */
+
+@media print {
+
+  .print-hidden {
+    display: none !important;
+  }
+
+  tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .shadow,
+  .shadow-md,
+  .rounded-2xl,
+  .backdrop-blur-md {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
 }
