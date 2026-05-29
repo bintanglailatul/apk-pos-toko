@@ -9,10 +9,11 @@ import {
 
 import {
   useEffect,
-  useState
+  useState,
+  Suspense
 } from 'react'
 
-export default function StrukPage() {
+function StrukContent() {
 
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -120,6 +121,8 @@ export default function StrukPage() {
       </div>
     )
   }
+
+
 
   return (
     <>
@@ -361,5 +364,12 @@ export default function StrukPage() {
         }
       `}</style>
     </>
+  )
+}
+export default function StrukPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <StrukContent />
+    </Suspense>
   )
 }
