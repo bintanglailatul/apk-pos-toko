@@ -21,6 +21,7 @@ function StrukContent() {
   const [dataArray, setDataArray] = useState<any[]>([])
   const [ready, setReady] = useState(false)
   const [printed, setPrinted] = useState(false)
+  const [settingsLoaded, setSettingsLoaded] = useState(false)
 
   // ================= SETTINGS =================
   const [namaToko, setNamaToko] = useState('BARU MUNCUL')
@@ -50,15 +51,24 @@ function StrukContent() {
     fetch("/api/settings")
       .then((res) => res.json())
       .then((data) => {
-        if (!data) return
 
-        setNamaToko(data.namaToko || "")
-        setAlamat(data.alamat || "")
-        setTelepon(data.telepon || "")
-        setFooter(data.footerStruk || "")
-        setLogo(data.logoToko || "")
-        setTagline(data.tagline || "")
-      })
+  if (!data) {
+    setSettingsLoaded(true)
+    return
+  }
+
+  setNamaToko(data.namaToko || "")
+  setAlamat(data.alamat || "")
+  setTelepon(data.telepon || "")
+  setFooter(data.footerStruk || "")
+  setLogo(data.logoToko || "")
+  setTagline(data.tagline || "")
+
+  setSettingsLoaded(true)
+})
+.catch(() => {
+  setSettingsLoaded(true)
+})
   }, [])
 
   // ================= PARSE DATA =================
@@ -89,18 +99,33 @@ function StrukContent() {
   }, [searchParams])
 
   // ================= AUTO PRINT =================
-  useEffect(() => {
-    if (!ready) return
-    if (printed) return
-    if (dataArray.length === 0) return
+useEffect(() => {
 
-    const timer = setTimeout(() => {
+  if (!ready) return
+  if (!settingsLoaded) return
+  if (printed) return
+  if (dataArray.length === 0) return
+
+  const timer = setTimeout(() => {
+
+    // pastikan hanya thermal aktif
+    document.body.classList.remove("print-a4-mode")
+    document.body.classList.add("print-thermal-mode")
+
+    requestAnimationFrame(() => {
       window.print()
       setPrinted(true)
-    }, 800)
 
-    return () => clearTimeout(timer)
-  }, [ready, dataArray, printed])
+      setTimeout(() => {
+        document.body.classList.remove("print-thermal-mode")
+      }, 800)
+    })
+
+  }, 1000)
+
+  return () => clearTimeout(timer)
+
+}, [ready, settingsLoaded, dataArray, printed])
 
   // ================= DATA KOSONG =================
   if (!ready || dataArray.length === 0) {
@@ -129,8 +154,7 @@ function StrukContent() {
       <div className="flex justify-center items-center min-h-screen bg-gray-300 py-3">
 
         {/* STRUK */}
-        <div className="print-thermal w-[52mm] bg-white pl-[3mm] pr-[1.5mm] py-[5px] text-black font-sans mx-auto">
-
+        <div className="print-thermal w-[48mm] mx-auto bg-white">
           {dataArray.map((data: any, indexStruk: number) => {
 
             const tanggal = data.createdAt
@@ -196,6 +220,7 @@ function StrukContent() {
                   </div>
 
                 </div>
+                
 
                 <div className="border-t border-dashed border-black my-1"></div>
 
@@ -330,39 +355,7 @@ function StrukContent() {
 
       </div>
 
-      <style jsx global>{`
-        @media print {
-
-          html,
-          body {
-            width: 54mm;
-            margin: 0 auto;
-            padding: 0;
-            background: white;
-            overflow: hidden;
-          }
-
-          button {
-            display: none;
-          }
-
-          .print-area {
-            width: 52mm;
-            padding-left: 0.5mm;
-            padding-right: 7mm;
-            padding-top: 1px;
-            padding-bottom: 1px;
-            margin: 0 auto;
-            box-sizing: border-box;
-            overflow: hidden;
-          }
-
-          @page {
-            size: 54mm auto;
-            margin: 0;
-          }
-        }
-      `}</style>
+      
     </>
   )
 }

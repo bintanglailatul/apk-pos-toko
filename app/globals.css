@@ -20,7 +20,7 @@ body {
   scrollbar-color: rgba(255,255,255,0.18) transparent;
 }
 
-/* ================= PRINT RESET (SAFE MODE) ================= */
+/* ================= PRINT BASE RESET ================= */
 
 @media print {
 
@@ -33,146 +33,160 @@ body {
     overflow: visible !important;
   }
 
-  /* sembunyikan UI umum */
-  button,
-  nav,
-  aside,
-  header,
-  footer {
-    display: none !important;
-  }
-
-  /* ================= KUNCI UTAMA PRINT ================= */
-
+  /* default: sembunyikan semua */
   body * {
     visibility: hidden !important;
-  }
-
-  /* hanya print area yang tampil */
-  .print-a4,
-  .print-a4 * {
-    visibility: visible !important;
-  }
-
-  .print-thermal,
-  .print-thermal * {
-    visibility: visible !important;
-  }
-
-  /* pastikan tampil di atas layout */
-  .print-a4,
-  .print-thermal {
-    position: fixed !important;
-    left: 0;
-    top: 0;
-    width: 100% !important;
-    background: white !important;
-    color: black !important;
-  }
-}
-
-/* ================= A4 LAPORAN ================= */
-
-@media print {
-
-  @page {
-    size: A4;
-    margin: 10mm;
-  }
-
-  .print-a4 {
-    width: 100% !important;
-  }
-
-  .print-a4 table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-    font-size: 10px !important;
-  }
-
-  .print-a4 th,
-  .print-a4 td {
-    border: 1px solid #000 !important;
-    padding: 5px !important;
-    font-size: 10px !important;
-    color: black !important;
-  }
-
-  .print-a4 thead {
-    display: table-header-group !important;
-    background: #000 !important;
-    color: #fff !important;
-  }
-
-  .print-a4 tr {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-  }
-
-  .print-a4 .shadow,
-  .print-a4 .shadow-md,
-  .print-a4 .rounded-2xl,
-  .print-a4 .backdrop-blur-md {
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    backdrop-filter: none !important;
-  }
-
-  /* zebra biar lebih jelas */
-  .print-a4 tr:nth-child(even) {
-    background: #f5f5f5 !important;
-  }
-}
-
-/* ================= STRUK 58MM ================= */
-
-@media print {
-
-  @page {
-    size: 58mm auto;
-    margin: 0;
-  }
-
-  .print-thermal {
-    width: 58mm !important;
-    font-size: 10px !important;
-  }
-
-  .print-thermal table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-  }
-
-  .print-thermal th,
-  .print-thermal td {
-    border: none !important;
-    padding: 2px !important;
-    font-size: 10px !important;
-  }
-
-  .print-thermal button {
-    display: none !important;
-  }
-}
-
-/* ================= GLOBAL CLEAN PRINT ================= */
-
-@media print {
-
-  .print-hidden {
-    display: none !important;
   }
 
   tr {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
+}
 
-  .shadow,
-  .shadow-md,
-  .rounded-2xl,
-  .backdrop-blur-md {
-    box-shadow: none !important;
-    border-radius: 0 !important;
+/* ================= A4 MODE (JANGAN DIUBAH) ================= */
+
+@media print {
+
+  body.print-a4-mode .print-a4,
+  body.print-a4-mode .print-a4 * {
+    visibility: visible !important;
+  }
+
+  body.print-a4-mode .print-a4 {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    background: white !important;
+    color: black !important;
+  }
+}
+
+/* ================= THERMAL MODE FINAL FIX ================= */
+
+@media print {
+
+  body.print-thermal-mode .print-thermal,
+  body.print-thermal-mode .print-thermal * {
+    visibility: visible !important;
+  }
+
+  /* 🔥 CORE FIX (CENTER VISUAL STABIL) */
+  body.print-thermal-mode .print-thermal {
+    position: fixed !important;
+    top: 0;
+
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+
+    width: 42mm !important;
+    max-width: 42mm !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background: white !important;
+    color: black !important;
+
+    font-size: 9px !important;
+    line-height: 1.25 !important;
+
+    text-align: left !important;
+
+    box-sizing: border-box !important;
+
+    display: inline-block !important;
+  }
+
+  /* RESET BODY */
+  body.print-thermal-mode {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: hidden !important;
+  }
+
+  /* HAPUS HEADER/FOOTER CHROME (URL localhost) */
+  @page {
+    margin: 0 !important;
+    size: auto;
+  }
+
+  /* HEADER CENTER */
+  body.print-thermal-mode .print-thermal .header {
+    text-align: center !important;
+    width: 100% !important;
+  }
+
+  /* FOOTER CENTER */
+  body.print-thermal-mode .print-thermal .footer {
+    text-align: center !important;
+    width: 100% !important;
+  }
+
+  /* TABLE */
+  body.print-thermal-mode .print-thermal table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  body.print-thermal-mode .print-thermal th,
+  body.print-thermal-mode .print-thermal td {
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 9px !important;
+    line-height: 1.2 !important;
+  }
+
+  /* TEXT RAPAT + RAPI */
+  body.print-thermal-mode .print-thermal p,
+  body.print-thermal-mode .print-thermal span,
+  body.print-thermal-mode .print-thermal div {
+    margin: 1px 0 !important;
+    padding: 0 !important;
+    font-size: 9px !important;
+    line-height: 1.25 !important;
+  }
+
+  /* TOTAL FIX BIAR TIDAK KEPOTONG */
+  body.print-thermal-mode .print-thermal .total-row {
+    display: flex !important;
+    justify-content: space-between !important;
+  }
+
+  body.print-thermal-mode .print-thermal .total-row span:last-child {
+    white-space: nowrap !important;
+    min-width: 18mm !important;
+    text-align: right !important;
+  }
+
+  /* ITEM NAME ELLIPSIS */
+  body.print-thermal-mode .print-thermal .item-name {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: block !important;
+    max-width: 24mm !important;
+  }
+
+  /* HIDE BUTTON */
+  body.print-thermal-mode .print-thermal button {
+    display: none !important;
+  }
+
+  /* ANTI KEPOTONG */
+  body.print-thermal-mode * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* ================= GLOBAL CLEAN ================= */
+
+@media print {
+
+  .print-hidden {
+    display: none !important;
   }
 }
