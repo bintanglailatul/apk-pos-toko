@@ -20,9 +20,20 @@ export default function PengeluaranPage() {
 
   const [loading, setLoading] = useState(false)
   const [notif, setNotif] = useState("")
+  const [riwayat, setRiwayat] = useState<any[]>([])
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
+  const fetchRiwayat = async () => {
+  try {
+    const res = await fetch("/api/pengeluaran")
+    const data = await res.json()
+
+    setRiwayat(data)
+  } catch (error) {
+    console.error(error)
+  }
+}
   useEffect(() => {
   const user = localStorage.getItem("user")
 
@@ -39,6 +50,9 @@ console.log(parsed)
   } catch (err) {
     console.log("User bukan JSON")
   }
+}, [])
+useEffect(() => {
+  fetchRiwayat()
 }, [])
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -84,6 +98,7 @@ console.log(parsed)
       if (fileInputRef.current) fileInputRef.current.value = ""
 
       setNotif("✅ Berhasil disimpan")
+      fetchRiwayat()
 
       setTimeout(() => setNotif(""), 3000)
 
@@ -94,6 +109,15 @@ console.log(parsed)
       setLoading(false)
     }
   }
+  const thirtyDaysAgo = new Date()
+thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+const riwayat30Hari = riwayat
+  .filter((item) => {
+    const tanggalItem = new Date(item.tanggal)
+    return tanggalItem >= thirtyDaysAgo
+  })
+  .sort((a, b) => b.id - a.id)
 
   return (
     <div className="flex h-screen overflow-hidden text-[1em]">
@@ -274,6 +298,72 @@ console.log(parsed)
                   </button>
 
                 </form>
+
+                <div className="mt-8">
+  <h2 className="font-bold text-xl mb-3">
+    Riwayat (30 Hari)
+  </h2>
+  <div className="overflow-x-auto">
+    <table className="w-full border">
+      <thead className="bg-slate-900 text-white">
+        <tr>
+          <th className="p-2 border">Tanggal</th>
+          <th className="p-2 border">Keterangan</th>
+          <th className="p-2 border">Kategori</th>
+          <th className="p-2 border">Metode</th>
+          <th className="p-2 border">Supplier</th>
+          <th className="p-2 border">Jumlah</th>
+          <th className="p-2 border">Input Oleh</th>
+          <th className="p-2 border">Bukti</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {riwayat30Hari.map((item) => (
+          <tr key={item.id}>
+            <td className="p-2 border">
+              {new Date(item.tanggal).toLocaleDateString("id-ID")}
+            </td>
+
+            <td className="p-2 border text-center">
+              {item.keterangan}
+            </td>
+
+            <td className="p-2 border text-center">
+              {item.kategori}
+            </td>
+
+            <td className="p-2 border text-center">
+              {item.metode}
+            </td>
+
+            <td className="p-2 border text-center">
+              {item.supplier}
+            </td>
+
+            <td className="p-2 border text-center">
+              Rp {Number(item.jumlah).toLocaleString("id-ID")}
+            </td>
+            <td className="p-3 border text-center">
+            {item.users?.role || "-"}
+                          </td>
+
+                          <td className="p-3 border text-center print-hidden">
+                          {item.bukti ? (
+                          <a
+                          href={item.bukti}
+                          target="_blank"
+                          className="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm"
+                          > Lihat 
+                          </a>
+               ) : "-"}
+              </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</div>
 
               </div>
             </div>

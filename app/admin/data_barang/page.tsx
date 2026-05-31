@@ -38,6 +38,9 @@ export default function DataBarang() {
   const [kategori, setKategori] = useState('')
   const [kategoriCustom, setKategoriCustom] = useState('')
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+
   // ================= STOK =================
   const [stokHijau, setStokHijau] = useState(20)
   const [stokOrange, setStokOrange] = useState(10)
@@ -93,6 +96,23 @@ export default function DataBarang() {
     fetchBarang()
   }, [])
 
+  const filteredBarang = barangList
+  .filter(
+    (item) =>
+      item.name?.toLowerCase().includes(search.toLowerCase()) ||
+      item.kategori?.toLowerCase().includes(search.toLowerCase())
+  )
+  .sort((a, b) => b.id - a.id)
+
+const totalPages = Math.ceil(
+  filteredBarang.length / itemsPerPage
+)
+
+const paginatedBarang = filteredBarang.slice(
+  (currentPage - 1) * itemsPerPage,
+  currentPage * itemsPerPage
+)
+
   // ================= EDIT =================
   const handleEdit = (item: Barang) => {
     setShowModal(true)
@@ -117,6 +137,12 @@ export default function DataBarang() {
   const [notif, setNotif] = useState("")
 
 const handleSave = async () => {
+
+  if (!name.trim()) {
+    setNotif("❌ Nama barang wajib diisi")
+    return
+  }
+
   try {
     const method = editId ? 'PUT' : 'POST'
 
@@ -156,6 +182,7 @@ const handleSave = async () => {
     }, 3000)
 
     setShowModal(false)
+    setCurrentPage(1)
 
     fetchBarang()
 
@@ -176,6 +203,9 @@ const handleSave = async () => {
       })
 
       fetchBarang()
+      if (currentPage > 1 && paginatedBarang.length === 1) {
+  setCurrentPage(currentPage - 1)
+}
     }
   }
 
@@ -202,6 +232,7 @@ const handleSave = async () => {
     <div className="mb-2">
       <button
         onClick={() => {
+          setCurrentPage(1)
           setShowModal(true)
           setEditId(null)
           setName('')
@@ -223,44 +254,45 @@ const handleSave = async () => {
   type="text"
   placeholder="Cari barang..."
   value={search}
-  onChange={(e) => setSearch(e.target.value)}
+  onChange={(e) => {
+    setSearch(e.target.value)
+    setCurrentPage(1)
+  }}
   className="w-full p-3 rounded-xl border bg-white text-gray-800 outline-none focus:ring-2 focus:ring-blue-500 mb-4"
 />
     </div>
 
 {/* ================= TABLE WRAPPER ================= */}
-<div className="flex-1 overflow-hidden">
+<div className="flex-1 overflow-x-auto overflow-y-hidden">
 
   {/* SCROLL AREA */}
   <div className="h-full overflow-y-auto rounded-xl">
-
     {/* TABLE CARD */}
-    <div className="bg-white/95 backdrop-blur-md border border-gray-300 rounded-xl shadow-md">
-
-      <table className="w-full">
+    <div className="min-w-[1200px] bg-white border border-gray-300 rounded-xl shadow-md">
+      <table className="w-full table-fixed">
 
         {/* HEADER (DIPERTEGAS) */}
-        <thead className="bg-gray-900 text-white sticky top-0 z-10">
+        <thead className="bg-gray-900 text-white sticky top-0 z-10 whitespace-nowrap">
           <tr>
-            <th className="p-3 border border-gray-700 font-bold">
+            <th className="w-[80px] p-3 border border-gray-700 font-bold">
               Kode
             </th>
-            <th className="p-3 border border-gray-700 font-bold">
+            <th className="w-[250px] p-3 border border-gray-700 font-bold">
               Nama
             </th>
-            <th className="p-3 border border-gray-700 font-bold">
+            <th className="w-[150px] p-3 border border-gray-700 font-bold">
               Kategori
             </th>
-            <th className="p-3 border border-gray-700 font-bold">
+            <th className="w-[140px] p-3 border border-gray-700 font-bold">
               Harga
             </th>
-            <th className="p-3 border border-gray-700 font-bold">
+            <th className="w-[140px] p-3 border border-gray-700 font-bold">
               Harga Beli
             </th>
-            <th className="p-3 border border-gray-700 font-bold">
+            <th className="w-[90px] p-3 border border-gray-700 font-bold">
               Stok
             </th>
-            <th className="p-3 border border-gray-700 font-bold">
+            <th className="w-[180px] p-3 border border-gray-700 font-bold">
               Aksi
             </th>
           </tr>
@@ -268,13 +300,7 @@ const handleSave = async () => {
 
         {/* BODY */}
         <tbody>
-          {barangList
-            .filter((item) =>
-              item.name?.toLowerCase().includes(search.toLowerCase()) ||
-              item.kategori?.toLowerCase().includes(search.toLowerCase())
-            )
-            .sort((a, b) => a.id - b.id) // 🔥 urut berdasarkan ID
-            .map((item) => (
+          {paginatedBarang.map((item) => (
               <tr
                 key={item.id}
                 className="hover:bg-gray-100 transition"
@@ -285,9 +311,9 @@ const handleSave = async () => {
                   {item.id}
                 </td>
 
-                <td className="p-3 border border-gray-300">
-                  {item.name}
-                </td>
+                <td className="p-3 border border-gray-300 truncate max-w-[250px]">
+  {item.name}
+</td>
 
                 <td className="p-3 border border-gray-300 text-center">
                   {item.kategori || "-"}
@@ -340,6 +366,47 @@ const handleSave = async () => {
         </tbody>
 
       </table>
+      <div className="flex justify-center items-center gap-2 p-4">
+
+  <button
+    disabled={
+  totalPages === 0 ||
+  currentPage === 1
+}
+    onClick={() => setCurrentPage((prev) => prev - 1)}
+    className="px-3 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
+  >
+    &lt;
+  </button>
+
+  {Array.from(
+    { length: totalPages },
+    (_, i) => i + 1
+  ).map((page) => (
+    <button
+      key={page}
+      onClick={() => setCurrentPage(page)}
+      className={`px-3 py-2 rounded-lg ${
+        currentPage === page
+          ? "bg-blue-700 text-white"
+          : "bg-gray-200"
+      }`}
+    >
+      {page}
+    </button>
+  ))}
+
+  <button
+    disabled={
+  totalPages === 0 ||
+  currentPage === totalPages}
+    onClick={() => setCurrentPage((prev) => prev + 1)}
+    className="px-3 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
+  >
+    &gt;
+  </button>
+
+</div>
 
     </div>
   </div>
@@ -371,7 +438,8 @@ const handleSave = async () => {
                 </label>
 
                 <input
-                  value={name}
+  required
+  value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Contoh: Pulpen"
                   className="border p-3 rounded-lg w-full mt-1"
@@ -395,7 +463,7 @@ const handleSave = async () => {
 
     <option value="Fotocopy">Fotocopy</option>
 
-    <option value="Fotocopy">print</option>
+    <option value="print">Print</option>
 
     <option value="Lain-lain">Lain-lain</option>
   </select>
@@ -467,7 +535,7 @@ const handleSave = async () => {
 
                 <div>
                   <label className="font-semibold text-[1em]">
-                    Hijau
+                    Aman
                   </label>
 
                   <input
@@ -482,7 +550,7 @@ const handleSave = async () => {
 
                 <div>
                  <label className="font-semibold text-[1em]">
-                    Orange
+                    Menipis
                   </label>
 
                   <input
@@ -497,7 +565,7 @@ const handleSave = async () => {
 
                 <div>
                 <label className="font-semibold text-[1em]">
-                    Merah
+                    Hampir Habis
                   </label>
 
                   <input

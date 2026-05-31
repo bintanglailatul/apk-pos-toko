@@ -21,6 +21,9 @@ export default function StokPage() {
   const [search, setSearch] = useState("");
   const [settings, setSettings] = useState<any>(null);
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+
   // FETCH DATA DARI DATABASE
   const fetchProducts = async () => {
     try {
@@ -47,6 +50,14 @@ const getStatus = (
   merah: number = 5,
   orange: number = 10
 ) => {
+  // PASTIKAN 0 DAN NEGATIF = HABIS
+  if (stok <= 0) {
+    return {
+      text: "Habis",
+      color: "bg-gray-700 text-white",
+    };
+  }
+
   if (stok <= merah) {
     return {
       text: "Hampir Habis",
@@ -69,8 +80,15 @@ const getStatus = (
 
   // FILTER SEARCH
   const filtered = products.filter((item) =>
-    item.name.toLowerCase().includes(search.toLowerCase())
-  );
+  item.name.toLowerCase().includes(search.toLowerCase())
+);
+
+const totalPages = Math.ceil(filtered.length / itemsPerPage);
+
+const paginated = filtered.slice(
+  (currentPage - 1) * itemsPerPage,
+  currentPage * itemsPerPage
+);
 
 return (
   <div className="flex h-screen overflow-hidden">
@@ -139,7 +157,7 @@ return (
 
                   {filtered.length > 0 ? (
 
-                    filtered.map((item, index) => {
+                    paginated.map((item, index) => {
 
                       const status = getStatus(
                         item.stok,
@@ -155,7 +173,7 @@ return (
 
                           {/* NO */}
                           <td className="p-3 border border-gray-300 text-center">
-                            {index + 1}
+                            {(currentPage - 1) * itemsPerPage + index + 1}
                           </td>
 
                           {/* NAMA */}
@@ -217,6 +235,40 @@ return (
                 </tbody>
 
               </table>
+
+              <div className="flex justify-center items-center gap-2 p-4">
+  
+  <button
+    disabled={currentPage === 1}
+    onClick={() => setCurrentPage((prev) => prev - 1)}
+    className="px-3 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
+  >
+    {"<"}
+  </button>
+
+  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+    <button
+      key={page}
+      onClick={() => setCurrentPage(page)}
+      className={`px-3 py-2 rounded-lg ${
+        currentPage === page
+          ? "bg-blue-700 text-white"
+          : "bg-gray-200"
+      }`}
+    >
+      {page}
+    </button>
+  ))}
+
+  <button
+    disabled={currentPage === totalPages || totalPages === 0}
+    onClick={() => setCurrentPage((prev) => prev + 1)}
+    className="px-3 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
+  >
+    {">"}
+  </button>
+
+</div>
 
             </div>
 
