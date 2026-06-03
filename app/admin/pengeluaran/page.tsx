@@ -29,7 +29,7 @@ export default function PengeluaranPage() {
     const res = await fetch("/api/pengeluaran")
     const data = await res.json()
 
-    setRiwayat(data)
+setRiwayat(Array.isArray(data) ? data : [])
   } catch (error) {
     console.error(error)
   }
@@ -112,12 +112,14 @@ useEffect(() => {
   const thirtyDaysAgo = new Date()
 thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-const riwayat30Hari = riwayat
-  .filter((item) => {
-    const tanggalItem = new Date(item.tanggal)
-    return tanggalItem >= thirtyDaysAgo
-  })
-  .sort((a, b) => b.id - a.id)
+const riwayat30Hari = Array.isArray(riwayat)
+  ? riwayat
+      .filter((item) => {
+        const tanggalItem = new Date(item.tanggal)
+        return tanggalItem >= thirtyDaysAgo
+      })
+      .sort((a, b) => b.id - a.id)
+  : []
 
   return (
     <div className="flex h-screen overflow-hidden text-[1em]">

@@ -1,5 +1,3 @@
-//
-
 'use client'
 
 declare const qz: any
