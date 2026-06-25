@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { uploadToDrive } from "@/lib/googleDrive"   // ← GANTI import lama
+import { uploadToDrive } from "@/lib/googleDrive"
 
 // ================= GET =================
 export async function GET(req: Request) {
@@ -60,12 +60,14 @@ export async function POST(req: Request) {
 
     const userId = Number(user_input)
 
+    // 🔍 DEBUG LOG
     console.log("=== DEBUG PENGELUARAN ===")
+    console.log("userId:", userId)
     console.log("keterangan:", keterangan)
-    console.log("user_input:", user_input)
-    console.log("GOOGLE_CLIENT_EMAIL:", process.env.GOOGLE_CLIENT_EMAIL)
-    console.log("GOOGLE_DRIVE_FOLDER_ID:", process.env.GOOGLE_DRIVE_FOLDER_ID)
-    console.log("PRIVATE_KEY ada?:", !!process.env.GOOGLE_PRIVATE_KEY)
+    console.log("EMAIL:", process.env.GOOGLE_CLIENT_EMAIL)
+    console.log("FOLDER:", process.env.GOOGLE_DRIVE_FOLDER_ID)
+    console.log("KEY ada?:", !!process.env.GOOGLE_PRIVATE_KEY)
+    console.log("KEY awal:", process.env.GOOGLE_PRIVATE_KEY?.substring(0, 50))
     console.log("DATABASE_URL ada?:", !!process.env.DATABASE_URL)
 
     if (isNaN(userId)) {
@@ -80,15 +82,22 @@ export async function POST(req: Request) {
     let buktiUrl: string | null = null
 
     if (buktiFile && buktiFile.size > 0) {
-      const bytes    = await buktiFile.arrayBuffer()
-      const buffer   = Buffer.from(bytes)
-      const fileName = `bukti-${Date.now()}-${buktiFile.name}`
+      try {
+        const bytes    = await buktiFile.arrayBuffer()
+        const buffer   = Buffer.from(bytes)
+        const fileName = `bukti-${Date.now()}-${buktiFile.name}`
 
-      // Upload ke Drive, dapat balik URL publik
-      buktiUrl = await uploadToDrive(buffer, fileName, buktiFile.type)
+        buktiUrl = await uploadToDrive(buffer, fileName, buktiFile.type)
+        console.log("Upload berhasil:", buktiUrl)
+
+      } catch (uploadError) {
+        // ✅ Kalau upload foto gagal, data tetap disimpan tanpa bukti
+        console.error("Upload Drive gagal:", uploadError)
+        buktiUrl = null
+      }
     }
 
-    // ================= SIMPAN =================
+    // ================= SIMPAN KE DATABASE =================
     const result = await prisma.pengeluaran.create({
       data: {
         user_id:    userId,
@@ -98,9 +107,11 @@ export async function POST(req: Request) {
         supplier,
         jumlah:  Number(jumlah.replace(/\D/g, "")),
         tanggal: new Date(tanggal),
-        bukti:   buktiUrl,   // ← sekarang isi URL Google Drive
+        bukti:   buktiUrl,
       },
     })
+
+    console.log("Simpan berhasil, id:", result.id)
 
     return NextResponse.json({
       success: true,
@@ -108,7 +119,7 @@ export async function POST(req: Request) {
     })
 
   } catch (error) {
-    console.error(error)
+    console.error("ERROR PENGELUARAN:", error)
 
     return NextResponse.json(
       { message: "Gagal menyimpan data" },
