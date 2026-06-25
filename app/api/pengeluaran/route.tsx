@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import { uploadToDrive } from "@/lib/googleDrive"
+import { writeFile } from "fs/promises"
+import path from "path"
+import fs from "fs"
+
+if (!fs.existsSync("public/uploads")) {
+  fs.mkdirSync("public/uploads", { recursive: true })
+}
 
 // ================= GET =================
 export async function GET(req: Request) {
@@ -20,23 +26,24 @@ export async function GET(req: Request) {
     }
 
     const data = await prisma.pengeluaran.findMany({
-      where: filter,
-      include: {
-        users: {
-          select: {
-            id: true,
-            name: true,
-            role: true,
-          },
-        },
+  where: filter,
+
+  include: {
+    users: {
+      select: {
+        id: true,
+        name: true,
+        role: true,
       },
-      orderBy: {
-        tanggal: "desc",
-      },
-    })
+    },
+  },
+
+  orderBy: {
+    tanggal: "desc",
+  },
+});
 
     return NextResponse.json(data)
-
   } catch (error) {
     return NextResponse.json(
       { message: "Gagal mengambil data" },
@@ -51,24 +58,18 @@ export async function POST(req: Request) {
     const formData = await req.formData()
 
     const keterangan = formData.get("keterangan") as string
-    const kategori   = formData.get("kategori")   as string
-    const metode     = formData.get("metode")      as string
-    const supplier   = formData.get("supplier")    as string
-    const jumlah     = formData.get("jumlah")      as string
-    const tanggal    = formData.get("tanggal")     as string
-    const user_input = formData.get("user_input")  as string
+    const kategori = formData.get("kategori") as string
+    const metode = formData.get("metode") as string
+    const supplier = formData.get("supplier") as string
+    const jumlah = formData.get("jumlah") as string
+    const tanggal = formData.get("tanggal") as string
+    const user_input = formData.get("user_input") as string
 
+    // 🔥 FIX USER ID (AMAN DARI "admin" / JSON / string)
     const userId = Number(user_input)
 
-    // 🔍 DEBUG LOG
-    console.log("=== DEBUG PENGELUARAN ===")
-    console.log("userId:", userId)
-    console.log("keterangan:", keterangan)
-    console.log("EMAIL:", process.env.GOOGLE_CLIENT_EMAIL)
-    console.log("FOLDER:", process.env.GOOGLE_DRIVE_FOLDER_ID)
-    console.log("KEY ada?:", !!process.env.GOOGLE_PRIVATE_KEY)
-    console.log("KEY awal:", process.env.GOOGLE_PRIVATE_KEY?.substring(0, 50))
-    console.log("DATABASE_URL ada?:", !!process.env.DATABASE_URL)
+    console.log("USER INPUT:", user_input)
+console.log("USER ID:", userId)
 
     if (isNaN(userId)) {
       return NextResponse.json(
@@ -77,41 +78,37 @@ export async function POST(req: Request) {
       )
     }
 
-    // ================= FILE → GOOGLE DRIVE =================
-    const buktiFile = formData.get("bukti") as File | null
-    let buktiUrl: string | null = null
+    // ================= FILE =================
+    const bukti = formData.get("bukti") as File | null
 
-    if (buktiFile && buktiFile.size > 0) {
-      try {
-        const bytes    = await buktiFile.arrayBuffer()
-        const buffer   = Buffer.from(bytes)
-        const fileName = `bukti-${Date.now()}-${buktiFile.name}`
+    let buktiPath = null
 
-        buktiUrl = await uploadToDrive(buffer, fileName, buktiFile.type)
-        console.log("Upload berhasil:", buktiUrl)
+    if (bukti) {
+      const bytes = await bukti.arrayBuffer()
+      const buffer = Buffer.from(bytes)
 
-      } catch (uploadError) {
-        // ✅ Kalau upload foto gagal, data tetap disimpan tanpa bukti
-        console.error("Upload Drive gagal:", uploadError)
-        buktiUrl = null
-      }
+      const fileName = Date.now() + "-" + bukti.name
+
+      const filePath = path.join(process.cwd(), "public/uploads", fileName)
+
+      await writeFile(filePath, buffer)
+
+      buktiPath = "/uploads/" + fileName
     }
 
-    // ================= SIMPAN KE DATABASE =================
+    // ================= SIMPAN =================
     const result = await prisma.pengeluaran.create({
       data: {
-        user_id:    userId,
+        user_id: userId, // 🔥 SESUAI PRISMA (INT WAJIB)
         keterangan,
         kategori,
         metode,
         supplier,
-        jumlah:  Number(jumlah.replace(/\D/g, "")),
+        jumlah: Number(jumlah.replace(/\D/g, "")),
         tanggal: new Date(tanggal),
-        bukti:   buktiUrl,
+        bukti: buktiPath,
       },
     })
-
-    console.log("Simpan berhasil, id:", result.id)
 
     return NextResponse.json({
       success: true,
@@ -119,7 +116,7 @@ export async function POST(req: Request) {
     })
 
   } catch (error) {
-    console.error("ERROR PENGELUARAN:", error)
+    console.error(error)
 
     return NextResponse.json(
       { message: "Gagal menyimpan data" },
