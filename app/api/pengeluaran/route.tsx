@@ -60,8 +60,13 @@ export async function POST(req: Request) {
 
     const userId = Number(user_input)
 
-    console.log("USER INPUT:", user_input)
-    console.log("USER ID:", userId)
+    console.log("=== DEBUG PENGELUARAN ===")
+    console.log("keterangan:", keterangan)
+    console.log("user_input:", user_input)
+    console.log("GOOGLE_CLIENT_EMAIL:", process.env.GOOGLE_CLIENT_EMAIL)
+    console.log("GOOGLE_DRIVE_FOLDER_ID:", process.env.GOOGLE_DRIVE_FOLDER_ID)
+    console.log("PRIVATE_KEY ada?:", !!process.env.GOOGLE_PRIVATE_KEY)
+    console.log("DATABASE_URL ada?:", !!process.env.DATABASE_URL)
 
     if (isNaN(userId)) {
       return NextResponse.json(
